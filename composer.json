@@ -1,0 +1,17 @@
+{
+  "name": "default/drom-data-mining",
+  "description": "Drom data mining tool",
+  "type": "project",
+  "autoload": {
+    "psr-4": {
+      "Default\\DromDataMining\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Artem Obukhov",
+      "email": "arteam_101@mail.ru"
+    }
+  ],
+  "require": {}
+}
