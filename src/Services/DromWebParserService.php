@@ -4,7 +4,6 @@ namespace Default\DromDataMining\Services;
 
 use Default\DromDataMining\Interfaces\DromParserInterface;
 use Default\DromDataMining\Models\Car;
-use ForceUTF8\Encoding;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Rct567\DomQuery\DomQuery;
@@ -70,8 +69,11 @@ class DromWebParserService implements DromParserInterface
             ]
         );
 
-        $contents = $response->getBody()->getContents();
-        $contents = mb_convert_encoding($contents, 'UTF-8','windows-1251' );
+        $contents = mb_convert_encoding(
+            $response->getBody()->getContents(),
+            'utf8',
+            'auto'
+        );
 
         $domDocument = new DomQuery($contents);
 
