@@ -5,7 +5,11 @@ require __DIR__ . '/vendor/autoload.php';
 
 
 use Default\DromDataMining\Services\DromApiParserService;
+use Default\DromDataMining\Services\DromWebParserService;
+use GuzzleHttp\Client;
 
-$parser = new DromApiParserService();
 
-$parser->parse();
+$client = new Client();
+
+$dromApiParserService = new DromWebParserService($client);
+$dromApiParserService->parse();
