@@ -16,6 +16,7 @@
   "require": {
     "guzzlehttp/guzzle": "^7.8",
     "ext-dom": "*",
-    "rct567/dom-query": "^1.1"
+    "rct567/dom-query": "^1.1",
+    "ext-iconv": "*"
   }
 }

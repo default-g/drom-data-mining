@@ -11,6 +11,10 @@ use Default\DromDataMining\Interfaces\SecretBuilderInterface;
  */
 class DromSecretBuilderService implements SecretBuilderInterface
 {
+    public function __construct() {
+        throw new \NotImplementedException();
+    }
+
     /**
      * @param HttpParam[] $httpParams
      * @return string

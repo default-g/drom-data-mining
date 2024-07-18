@@ -5,21 +5,21 @@ namespace Default\DromDataMining\Models;
 class Car
 {
     public function __construct(
-        public ?int $id,
-        public ?string $url,
-        public ?string $model,
-        public ?string $brand,
-        public ?float $price,
-        public ?string $priceRating,
-        public ?string $generation,
-        public ?string $complectation,
-        public ?int $mileage,
-        public ?bool $withoutRussianMileage,
-        public ?string $color,
-        public ?string $bodyType,
-        public ?int $enginePower,
-        public ?string $fuelType,
-        public ?float $engineVolume,
+        public ?int $id = null,
+        public ?string $url = null,
+        public ?string $model = null,
+        public ?string $brand = null,
+        public ?float $price = null,
+        public ?string $priceRating = null,
+        public ?string $generation = null,
+        public ?string $complectation = null,
+        public ?int $mileage = null,
+        public ?bool $withoutRussianMileage = null,
+        public ?string $color = null,
+        public ?string $bodyType = null,
+        public ?int $enginePower = null,
+        public ?string $fuelType = null,
+        public ?float $engineVolume = null,
     )
     {
     }

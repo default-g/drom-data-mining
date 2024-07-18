@@ -62,17 +62,30 @@ class DromWebParserService implements DromParserInterface
             $this->getUrlForPage($page),
             [
                 'query' => $this->getParams(),
+                'headers' => [
+                    'Accept-Encoding' => 'gzip, deflate',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9,ru-RU;q=0.8,ru;q=0.7',
+                ]
             ]
         );
 
-        $domDocument = new DomQuery($response->getBody()->getContents());
+        $contents = $response->getBody()->getContents();
+        $contents = mb_convert_encoding($contents, 'UTF-8','windows-1251' );
+
+        $domDocument = new DomQuery($contents);
+
+        $cars = [];
         foreach ($domDocument->find('[data-ftid="bulls-list_bull"]') as $domQuery) {
             $car = $this->processCar($domQuery);
+            if ($car === null) {
+                continue;
+            }
+
+            $cars[] = $car;
         };
 
-
         return [];
-
     }
 
     /**
@@ -85,7 +98,8 @@ class DromWebParserService implements DromParserInterface
     {
         $link = $domQuery->find('a')->first()->attr('href');
         $id = $this->extractIdFromUrl($link);
-        echo ($domQuery->find('[data-ftid="bull_label_coming"]')->first()->html());
+
+        echo($domQuery->find('[data-ftid="bull_label_coming"]')->first()->html());
 
         $carPage = $this->client
             ->get($link)
