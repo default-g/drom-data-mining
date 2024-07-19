@@ -4,6 +4,7 @@ namespace Default\DromDataMining\Services;
 
 use Default\DromDataMining\Http\HttpParam;
 use Default\DromDataMining\Interfaces\SecretBuilderInterface;
+use Default\DromDataMining\Exceptions\NotImplementedException;
 
 /**
  * Данный класс построен на основе декомпилированного кода приложения
@@ -12,7 +13,7 @@ use Default\DromDataMining\Interfaces\SecretBuilderInterface;
 class DromSecretBuilderService implements SecretBuilderInterface
 {
     public function __construct() {
-        throw new \NotImplementedException();
+        throw new NotImplementedException();
     }
 
     /**

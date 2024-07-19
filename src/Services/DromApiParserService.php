@@ -2,6 +2,7 @@
 
 namespace Default\DromDataMining\Services;
 
+use Default\DromDataMining\Exceptions\NotImplementedException;
 use GuzzleHttp\Client;
 
 use Default\DromDataMining\Interfaces\DromParserInterface;
@@ -20,7 +21,7 @@ class DromApiParserService implements DromParserInterface
 
     public function __construct(private readonly Client $client)
     {
-        throw new \NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public function parse(): array

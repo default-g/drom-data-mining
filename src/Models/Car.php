@@ -20,6 +20,7 @@ class Car
         public ?int $enginePower = null,
         public ?string $fuelType = null,
         public ?float $engineVolume = null,
+        public array $imageLinks = []
     )
     {
     }

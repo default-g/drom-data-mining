@@ -18,6 +18,8 @@
     "ext-dom": "*",
     "rct567/dom-query": "^1.1",
     "ext-iconv": "*",
-    "simplehtmldom/simplehtmldom": "dev-master"
+    "simplehtmldom/simplehtmldom": "dev-master",
+    "symfony/dom-crawler": "^7.1",
+    "symfony/css-selector": "^7.1"
   }
 }
