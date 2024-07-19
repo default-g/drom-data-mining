@@ -25,10 +25,12 @@ class DromWebParserService implements DromParserInterface
     public function parse(): Generator
     {
         $page = 1;
-        while ($cars = $this->processPage($page++)) {
+        while ($cars = $this->processPage($page)) {
             foreach ($cars as $car) {
                 yield $car;
             }
+
+            $page++;
         }
     }
 
@@ -60,6 +62,7 @@ class DromWebParserService implements DromParserInterface
 
     /**
      * Обрабатывает страницу с автомобилями
+     *
      * @param int $page
      * @return array
      * @throws GuzzleException
@@ -94,11 +97,8 @@ class DromWebParserService implements DromParserInterface
      */
     protected function processCar(Crawler $crawler): ?Car
     {
-        $doesCarHasComingLabel = (bool) $crawler
-            ->filter('[data-ftid="bull_label_coming"]')
-            ->count();
-
-        if ($doesCarHasComingLabel) {
+        // Начало парсинга блока с объявлением
+        if ($this->checkIfCarHasComingLabel($crawler)) {
             return null;
         }
 
@@ -108,33 +108,47 @@ class DromWebParserService implements DromParserInterface
             return null;
         }
         $title = $this->parseTitle($crawler);
-
-        [$mark, $model, $year] = $this->getMarkModelYearFromTitle($title);
-
+        [$mark, $model] = $this->getMarkAndModelFromTitle($title);
         $price = $this->parsePrice($crawler);
-
         $priceRating = $this->parsePriceRating($crawler);
+        $carWithoutRussianMileage = !$this->checkIfCarHasRussianMileage($crawler);
 
+        // Начало парсинга данных уже со страницы автомобиля
         $carPageCrawler = $this->getCrawlerForUrl($link);
-
-        $generation = $carPageCrawler
-            ->filter('[data-ga-stats-name="generation_link"]')
-            ->text();
+        $generation = $this->parseGeneration($carPageCrawler);
+        $complectation = $this->parseComplectation($carPageCrawler);
+        $mileage = $this->parseMileage($carPageCrawler);
+        $color = $this->parseColor($carPageCrawler);
+        $bodyType = $this->parseBodyType($carPageCrawler);
+        $enginePower = $this->parseEnginePower($carPageCrawler);
+        $fuelType = $this->parseFuelType($carPageCrawler);
+        $engineVolume = $this->parseEngineVolume($carPageCrawler);
+        $imagesLinks = $this->parseImagesLinks($carPageCrawler);
 
         return new Car(
-            $id,
-            $link,
-            $model,
-            $mark,
-            $price,
-            $priceRating,
-            $generation
+            id: $id,
+            url: $link,
+            model: $model,
+            brand: $mark,
+            price: $price,
+            priceRating: $priceRating,
+            generation: $generation,
+            complectation: $complectation,
+            mileage: $mileage,
+            withoutRussianMileage: $carWithoutRussianMileage,
+            color: $color,
+            bodyType: $bodyType,
+            enginePower: $enginePower,
+            fuelType: $fuelType,
+            engineVolume: $engineVolume,
+            imageLinks: $imagesLinks
         );
     }
 
 
     /**
      * Достает ID объявления из ссылки
+     *
      * @param string $url
      * @return string|null
      */
@@ -185,12 +199,12 @@ class DromWebParserService implements DromParserInterface
     /**
      * Делит строку вида
      * Toyota Corolla, 2020
-     * На отдельные части
+     * на марку и модель
      *
      * @param string $title
      * @return array
      */
-    protected function getMarkModelYearFromTitle(string $title): array
+    protected function getMarkAndModelFromTitle(string $title): array
     {
         $title = preg_replace('/[^A-Za-z0-9\-]/', ' ', $title);
         $splitString = explode(' ', $title);
@@ -198,7 +212,6 @@ class DromWebParserService implements DromParserInterface
         return [
             $splitString[0] ?? null,
             $splitString[1] ?? null,
-            $splitString[2] ?? null
         ];
     }
 
@@ -274,6 +287,12 @@ class DromWebParserService implements DromParserInterface
     }
 
 
+    /**
+     * Парсинг оценку цены
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
     protected function parsePriceRating(Crawler $crawler): ?string
     {
         try {
@@ -283,5 +302,242 @@ class DromWebParserService implements DromParserInterface
         } catch (\InvalidArgumentException $exception) {
             return null;
         }
+    }
+
+
+    /**
+     * Проверка на наличие метки "В пути"
+     *
+     * @param Crawler $crawler
+     * @return bool
+     */
+    protected function checkIfCarHasComingLabel(Crawler $crawler): bool
+    {
+        return (bool)$crawler
+            ->filter('[data-ftid="bull_label_coming"]')
+            ->count();
+    }
+
+    /**
+     * Проверка, есть ли у авто пробег по РФ
+     *
+     * @param Crawler $crawler
+     * @return bool
+     */
+    protected function checkIfCarHasRussianMileage(Crawler $crawler): bool
+    {
+        return !$crawler
+            ->filter('.css-1jdyedu.ejipaoe0')
+            ->count();
+    }
+
+
+    /**
+     * Парсинг поколения
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseGeneration(Crawler $crawler): ?string
+    {
+        try {
+            return $crawler
+                ->filter('[data-ga-stats-name="generation_link"]')
+                ->text();
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Парсинг комплектации
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseComplectation(Crawler $crawler): ?string
+    {
+        try {
+            return $crawler
+                ->filter('[data-ga-stats-name="complectation_link"]')
+                ->text();
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Парсинг пробега
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseMileage(Crawler $crawler): ?string
+    {
+        try {
+            $mileage = $crawler
+                ->filter('tbody')
+                ->filter('tr')
+                ->slice(7, 1)
+                ->text();
+
+            $mileage = explode('}', $mileage)[1];
+
+            return preg_replace('/[^0-9]/', '', $mileage);
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+
+    }
+
+
+    /**
+     * Парсит цвет
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseColor(Crawler $crawler): ?string
+    {
+        try {
+            return $crawler
+                ->filter('tbody')
+                ->filter('tr')
+                ->slice(6, 1)
+                ->filter('td')
+                ->text();
+
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Парсинг типа кузова
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseBodyType(Crawler $crawler): ?string
+    {
+        try {
+            return $crawler
+                ->filter('tbody')
+                ->filter('tr')
+                ->slice(5, 1)
+                ->filter('td')
+                ->text();
+
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Парсинг мощности двигателя
+     *
+     * @param Crawler $crawler
+     * @return int|null
+     */
+    protected function parseEnginePower(Crawler $crawler): ?int
+    {
+        try {
+            $enginePower = $crawler
+                ->filter('tbody')
+                ->filter('tr')
+                ->slice(1, 1)
+                ->filter('td')
+                ->text();
+
+            $enginePower = explode('}', $enginePower)[1] ?? null;
+
+            return preg_replace('/[^0-9]/', '', $enginePower);
+
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Получение строчки с описанием параметров двигателя
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseEngineDescription(Crawler $crawler): ?string
+    {
+        try {
+            return $crawler
+                ->filter('tbody')
+                ->filter('tr')
+                ->slice(0, 1)
+                ->filter('td')
+                ->text();
+        } catch (\InvalidArgumentException $exception) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Парсинг объема двигателя
+     *
+     * @param Crawler $crawler
+     * @return float|null
+     */
+    protected function parseEngineVolume(Crawler $crawler): ?float
+    {
+        $engineDescription = $this->parseEngineDescription($crawler);
+        if ($engineDescription === null) {
+            return null;
+        }
+
+        $engineVolume = explode(' ', $engineDescription)[1] ?? null;
+
+        return preg_replace('/[^0-9.]/', '', $engineVolume);
+    }
+
+
+    /**
+     * Парсинг типа топлива
+     *
+     * @param Crawler $crawler
+     * @return string|null
+     */
+    protected function parseFuelType(Crawler $crawler): ?string
+    {
+        $engineDescription = $this->parseEngineDescription($crawler);
+        if ($engineDescription === null) {
+            return null;
+        }
+
+        $fuelType = explode(' ', $engineDescription)[0] ?? null;
+
+        return preg_replace('/[^A-Za-z]/', '', $fuelType);
+    }
+
+
+    /**
+     * Парсит URLы изображений
+     *
+     * @param Crawler $crawler
+     * @return array
+     */
+    protected function parseImagesLinks(Crawler $crawler): array
+    {
+        $links = [];
+        $crawler
+            ->filter('[data-ftid="bull-page_bull-gallery_thumbnails"]')
+            ->filter('a')
+            ->each(function (Crawler $element) use (&$links) {
+                $links[] = $element->attr('href');
+            });
+
+        return $links;
     }
 }
