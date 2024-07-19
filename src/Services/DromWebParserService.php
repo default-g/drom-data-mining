@@ -4,12 +4,10 @@ namespace Default\DromDataMining\Services;
 
 use Default\DromDataMining\Interfaces\DromParserInterface;
 use Default\DromDataMining\Models\Car;
-use DOMDocument;
 use DOMElement;
 use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Rct567\DomQuery\DomQuery;
 use Symfony\Component\DomCrawler\Crawler;
 
 class DromWebParserService implements DromParserInterface
