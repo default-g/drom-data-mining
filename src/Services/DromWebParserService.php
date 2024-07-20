@@ -19,7 +19,7 @@ class DromWebParserService implements DromParserInterface
     }
 
     /**
-     * @return Generator
+     * @return Generator<Car>
      * @throws GuzzleException
      */
     public function parse(): Generator
@@ -110,7 +110,6 @@ class DromWebParserService implements DromParserInterface
         $title = $this->parseTitle($crawler);
         [$mark, $model] = $this->getMarkAndModelFromTitle($title);
         $price = $this->parsePrice($crawler);
-        $priceRating = $this->parsePriceRating($crawler);
         $carWithoutRussianMileage = !$this->checkIfCarHasRussianMileage($crawler);
 
         // Начало парсинга данных уже со страницы автомобиля
@@ -124,6 +123,8 @@ class DromWebParserService implements DromParserInterface
         $fuelType = $this->parseFuelType($carPageCrawler);
         $engineVolume = $this->parseEngineVolume($carPageCrawler);
         $imagesLinks = $this->parseImagesLinks($carPageCrawler);
+        $priceRating = $this->parsePriceRating($carPageCrawler);
+
 
         return new Car(
             id: $id,
@@ -297,7 +298,7 @@ class DromWebParserService implements DromParserInterface
     {
         try {
             return $crawler
-                ->filter('.ejipaoe0')
+                ->filter('[data-ga-stats-name="good_deal_mark"]')
                 ->text();
         } catch (\InvalidArgumentException $exception) {
             return null;
@@ -372,9 +373,9 @@ class DromWebParserService implements DromParserInterface
      * Парсинг пробега
      *
      * @param Crawler $crawler
-     * @return string|null
+     * @return float|null
      */
-    protected function parseMileage(Crawler $crawler): ?string
+    protected function parseMileage(Crawler $crawler): ?int
     {
         try {
             $mileage = $crawler
@@ -385,7 +386,7 @@ class DromWebParserService implements DromParserInterface
 
             $mileage = explode('}', $mileage)[1];
 
-            return preg_replace('/[^0-9]/', '', $mileage);
+            return (int) preg_replace('/[^0-9]/', '', $mileage);
         } catch (\InvalidArgumentException $exception) {
             return null;
         }
