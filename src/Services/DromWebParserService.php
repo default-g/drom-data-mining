@@ -14,7 +14,7 @@ class DromWebParserService implements DromParserInterface
 {
     public const LIST_URL = 'https://auto.drom.ru/all/page';
 
-    public function __construct(private Client $client)
+    public function __construct(private readonly Client $client)
     {
     }
 
@@ -52,10 +52,10 @@ class DromWebParserService implements DromParserInterface
     {
         return [
             'multiselect' => ['9_4_15_all', '9_4_16_all'],
-            'unsold' => 1,
+            'unsold' => '1',
             'cid' => ['23', '170'],
-            'pts' => 2,
-            'damaged' => 2,
+            'pts' => '2',
+            'damaged' => '2',
         ];
     }
 
@@ -70,7 +70,7 @@ class DromWebParserService implements DromParserInterface
     protected function processPage(int $page): array
     {
         $cars = [];
-        $webCrawler = $this->getCrawlerForUrl($this->getUrlForPage($page));
+        $webCrawler = $this->getCrawlerForUrl($this->getUrlForPage($page), $this->getParams());
         /**
          * @var DOMElement $element
          */
@@ -114,17 +114,16 @@ class DromWebParserService implements DromParserInterface
 
         // Начало парсинга данных уже со страницы автомобиля
         $carPageCrawler = $this->getCrawlerForUrl($link);
-        $generation = $this->parseGeneration($carPageCrawler);
-        $complectation = $this->parseComplectation($carPageCrawler);
-        $mileage = $this->parseMileage($carPageCrawler);
-        $color = $this->parseColor($carPageCrawler);
-        $bodyType = $this->parseBodyType($carPageCrawler);
-        $enginePower = $this->parseEnginePower($carPageCrawler);
-        $fuelType = $this->parseFuelType($carPageCrawler);
-        $engineVolume = $this->parseEngineVolume($carPageCrawler);
-        $imagesLinks = $this->parseImagesLinks($carPageCrawler);
-        $priceRating = $this->parsePriceRating($carPageCrawler);
-
+        $generation = $this->parseGenerationFromCarPage($carPageCrawler);
+        $complectation = $this->parseComplectationFromCarPage($carPageCrawler);
+        $mileage = $this->parseMileageFromCarPage($carPageCrawler);
+        $color = $this->parseColorFromCarPage($carPageCrawler);
+        $bodyType = $this->parseBodyTypeFromCarPage($carPageCrawler);
+        $enginePower = $this->parseEnginePowerFromCarPage($carPageCrawler);
+        $fuelType = $this->parseFuelTypeFromCarPage($carPageCrawler);
+        $engineVolume = $this->parseengineVolumeFromCarPage($carPageCrawler);
+        $imagesLinks = $this->parseImagesLinksFromCarPage($carPageCrawler);
+        $priceRating = $this->parsePriceRatingFromCarPage($carPageCrawler);
 
         return new Car(
             id: $id,
@@ -167,20 +166,19 @@ class DromWebParserService implements DromParserInterface
      * @return Crawler
      * @throws GuzzleException
      */
-    protected function getCrawlerForUrl(string $url): Crawler
+    protected function getCrawlerForUrl(string $url, $params = []): Crawler
     {
         $response = $this->client->get(
             $url,
             [
-                'query' => $this->getParams(),
+                'query' => $params,
                 'headers' => [
                     'Accept-Encoding' => 'gzip, deflate',
                     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language' => 'en-US,en;q=0.9,ru-RU;q=0.8,ru;q=0.7',
-                ]
+                ],
             ]
         );
-
         $rawContents = $response->getBody()->getContents();
 
         $metaCharsetPatterns = [
@@ -259,9 +257,12 @@ class DromWebParserService implements DromParserInterface
     protected function parseTitle(Crawler $crawler): ?string
     {
         try {
-            return $crawler
+            $title = $crawler
                 ->filter('[data-ftid="bull_title"]')
                 ->text();
+
+            return explode('}', $title)[1] ?? $title;
+
         } catch (\InvalidArgumentException $exception) {
             return null;
         }
@@ -294,7 +295,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parsePriceRating(Crawler $crawler): ?string
+    protected function parsePriceRatingFromCarPage(Crawler $crawler): ?string
     {
         try {
             return $crawler
@@ -339,7 +340,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parseGeneration(Crawler $crawler): ?string
+    protected function parseGenerationFromCarPage(Crawler $crawler): ?string
     {
         try {
             return $crawler
@@ -357,7 +358,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parseComplectation(Crawler $crawler): ?string
+    protected function parseComplectationFromCarPage(Crawler $crawler): ?string
     {
         try {
             return $crawler
@@ -375,7 +376,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return float|null
      */
-    protected function parseMileage(Crawler $crawler): ?int
+    protected function parseMileageFromCarPage(Crawler $crawler): ?int
     {
         try {
             $mileage = $crawler
@@ -400,7 +401,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parseColor(Crawler $crawler): ?string
+    protected function parseColorFromCarPage(Crawler $crawler): ?string
     {
         try {
             return $crawler
@@ -422,7 +423,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parseBodyType(Crawler $crawler): ?string
+    protected function parseBodyTypeFromCarPage(Crawler $crawler): ?string
     {
         try {
             return $crawler
@@ -444,7 +445,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return int|null
      */
-    protected function parseEnginePower(Crawler $crawler): ?int
+    protected function parseEnginePowerFromCarPage(Crawler $crawler): ?int
     {
         try {
             $enginePower = $crawler
@@ -491,7 +492,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return float|null
      */
-    protected function parseEngineVolume(Crawler $crawler): ?float
+    protected function parseengineVolumeFromCarPage(Crawler $crawler): ?float
     {
         $engineDescription = $this->parseEngineDescription($crawler);
         if ($engineDescription === null) {
@@ -510,16 +511,17 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return string|null
      */
-    protected function parseFuelType(Crawler $crawler): ?string
+    protected function parseFuelTypeFromCarPage(Crawler $crawler): ?string
     {
         $engineDescription = $this->parseEngineDescription($crawler);
         if ($engineDescription === null) {
             return null;
         }
 
-        $fuelType = explode(' ', $engineDescription)[0] ?? null;
+        $splitString = explode('}', $engineDescription);
+        $fuelType = explode(' ', $splitString[2] ?? '')[0] ?? null;
 
-        return preg_replace('/[^A-Za-z]/', '', $fuelType);
+        return preg_replace('/[^A-Za-zА-Я]/', '', $fuelType);
     }
 
 
@@ -529,7 +531,7 @@ class DromWebParserService implements DromParserInterface
      * @param Crawler $crawler
      * @return array
      */
-    protected function parseImagesLinks(Crawler $crawler): array
+    protected function parseImagesLinksFromCarPage(Crawler $crawler): array
     {
         $links = [];
         $crawler

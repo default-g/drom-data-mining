@@ -18,6 +18,8 @@
     "ext-dom": "*",
     "ext-iconv": "*",
     "symfony/dom-crawler": "^7.1",
-    "symfony/css-selector": "^7.1"
+    "symfony/css-selector": "^7.1",
+    "ext-zip": "*",
+    "caseyamcl/guzzle_retry_middleware": "^2.10"
   }
 }
