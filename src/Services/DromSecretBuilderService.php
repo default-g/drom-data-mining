@@ -56,7 +56,11 @@ class DromSecretBuilderService implements SecretBuilderInterface
         return '';
     }
 
-
+    /**
+     * @param array $list
+     * @param int $i12
+     * @return bool
+     */
     protected function d(array $list, int $i12): bool
     {
         if (count($list) <= 1) {

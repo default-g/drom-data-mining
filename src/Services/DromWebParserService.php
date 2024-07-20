@@ -74,15 +74,19 @@ class DromWebParserService implements DromParserInterface
         /**
          * @var DOMElement $element
          */
-        $webCrawler->filter('div [data-ftid="bulls-list_bull"]')->each(function (Crawler $element) use (&$cars) {
-            $car = $this->processCar($element);
+        $webCrawler
+            ->filter('[data-bulletin-list="true"]')
+            ->first()
+            ->filter('div [data-ftid="bulls-list_bull"]')
+            ->each(function (Crawler $element) use (&$cars) {
+                $car = $this->processCar($element);
 
-            if ($car === null) {
-                return;
-            }
+                if ($car === null) {
+                    return;
+                }
 
-            $cars[] = $this->processCar($element);
-        });
+                $cars[] = $this->processCar($element);
+            });
 
         return $cars;
     }
@@ -387,7 +391,7 @@ class DromWebParserService implements DromParserInterface
 
             $mileage = explode('}', $mileage)[1];
 
-            return (int) preg_replace('/[^0-9]/', '', $mileage);
+            return (int)preg_replace('/[^0-9]/', '', $mileage);
         } catch (\InvalidArgumentException $exception) {
             return null;
         }

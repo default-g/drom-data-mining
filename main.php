@@ -74,6 +74,7 @@ foreach ($dromApiParserService->parse() as $car) {
     foreach ($car->imageLinks as $imageLink) {
         $imageFileName = $directoryForImagesPath . DIRECTORY_SEPARATOR . uniqid() . '.jpg';
         file_put_contents($imageFileName, file_get_contents($imageLink));
+        sleep(1);
     }
 }
 
@@ -88,8 +89,7 @@ $files = new RecursiveIteratorIterator(
 );
 
 foreach ($files as $file) {
-    if (!$file->isDir())
-    {
+    if (!$file->isDir()) {
         $filePath = $file->getRealPath();
         $relativePath = substr($filePath, strlen(SAVE_FOLDER) + 1);
 
@@ -98,4 +98,5 @@ foreach ($files as $file) {
 }
 
 $zip->close();
-unlink(SAVE_FOLDER);
+
+shell_exec('rm -rf ' . SAVE_FOLDER);

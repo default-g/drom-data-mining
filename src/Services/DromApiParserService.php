@@ -3,9 +3,11 @@
 namespace Default\DromDataMining\Services;
 
 use Default\DromDataMining\Exceptions\NotImplementedException;
+use Generator;
 use GuzzleHttp\Client;
 
 use Default\DromDataMining\Interfaces\DromParserInterface;
+use GuzzleHttp\Exception\GuzzleException;
 
 /**
  * Сначала пробовал через реверс инженеринг и прокси
@@ -24,8 +26,14 @@ class DromApiParserService implements DromParserInterface
         throw new NotImplementedException();
     }
 
-    public function parse(): array
+    /**
+     * @return Generator
+     * @throws GuzzleException
+     */
+    public function parse(): Generator
     {
+        yield null;
+
         $parameters = $this->getParameters();
         $parameters['secret'] = $this->calculateSecretFromParameters($parameters);
 
@@ -33,10 +41,13 @@ class DromApiParserService implements DromParserInterface
             'query' => $parameters
         ]);
 
-        return [];
     }
 
 
+    /**
+     * @param array $parameters
+     * @return string
+     */
     public function calculateSecretFromParameters(array $parameters): string
     {
         $string = '';
@@ -51,6 +62,9 @@ class DromApiParserService implements DromParserInterface
     }
 
 
+    /**
+     * @return array
+     */
     public function getParameters(): array
     {
         return [
